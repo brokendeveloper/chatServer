@@ -1,0 +1,120 @@
+# =========================
+# Arquivos e diretórios padrão do Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos temporários e de logs
+*.log
+*.pot
+*.tmp
+*.bak
+*.swp
+*.swo
+
+# =========================
+# Ambientes virtuais
+# =========================
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# =========================
+# Cache e build
+# =========================
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# =========================
+# Testes e relatórios
+# =========================
+.coverage
+.tox/
+.nox/
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# =========================
+# Documentação
+# =========================
+docs/_build/
+doc/_build/
+site/
+
+# =========================
+# IDEs e editores
+# =========================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# =========================
+# Configurações de sistema
+# =========================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Jupyter e notebooks
+# =========================
+.ipynb_checkpoints
+jupyter_cache/
+jupyter_execute/
+
+# =========================
+# Dependências geradas automaticamente
+# =========================
+Pipfile.lock
+poetry.lock
+*.sqlite3
+
+# =========================
+# Outros
+# =========================
+*.env
+*.json
+*.yml
+*.yaml
+*.pkl
+*.db
+*.dat
+*.csv
+*.tsv
+*.log
+
+# =========================
+# Projetos Django/Flask (caso use)
+# =========================
+*.mo
+*.pot
+*.log
+local_settings.py
+db.sqlite3
+media/
+staticfiles/
