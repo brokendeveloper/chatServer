@@ -1,65 +1,60 @@
 import socket
 import threading
+from colorama import Fore, init
 
-HOST = '127.0.0.1'
-PORT = 55555
-
-server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server.bind((HOST, PORT))
-server.listen()
+init(autoreset=True)
 
 clients = []
-nicknames = []
 
-lock = threading.Lock()
+def broadcast(message, sender_socket=None):
+    for client in clients:
+        if client != sender_socket:
+            try:
+                client.send(message)
+            except:
+                client.close()
+                if client in clients:
+                    clients.remove(client)
 
-def broadcast(message, _client=None):
-    with lock:
-        for client in clients:
-            if client != _client:
-                try:
-                    client.send(message)
-                except:
-                    remove_client(client)
+def handle_client(client_socket, address):
+    print(Fore.GREEN + f"[+] Nova conexão de {address}")
+    try:
+        nickname = client_socket.recv(1024).decode()
+    except:
+        client_socket.close()
+        return
 
-def remove_client(client):
-    if client in clients:
-        index = clients.index(client)
-        clients.remove(client)
-        nickname = nicknames[index]
-        nicknames.remove(nickname)
-        broadcast(f'{nickname} saiu do chat.'.encode('utf-8'))
-        print(f'{nickname} desconectado.')
+    welcome = f"{nickname} entrou no chat!"
+    print(Fore.CYAN + welcome)
+    broadcast(welcome.encode())
 
-def handle_client(client):
     while True:
         try:
-            message = client.recv(1024)
+            message = client_socket.recv(1024)
             if not message:
-                with lock:
-                    remove_client(client)
                 break
-            broadcast(message, client)
+            print(Fore.WHITE + f"{nickname}: {message.decode()}")
+            broadcast(f"{nickname}: {message.decode()}".encode(), client_socket)
         except:
-            with lock:
-                remove_client(client)
             break
 
-def receive_connections():
-    print("Servidor está online e aguardando conexões...")
+    client_socket.close()
+    if client_socket in clients:
+        clients.remove(client_socket)
+    broadcast(f"{nickname} saiu do chat.".encode())
+    print(Fore.RED + f"[-] Conexão encerrada: {address}")
+
+def start_server(host='127.0.0.1', port=5555):
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.bind((host, port))
+    server.listen()
+    print(Fore.YELLOW + f"[SERVIDOR] Escutando em {host}:{port}")
+
     while True:
-        client, address = server.accept()
-        print(f"Nova conexão de {str(address)}")
-        client.send('NICK'.encode('utf-8'))
-        nickname = client.recv(1024).decode('utf-8')
-        with lock:
-            nicknames.append(nickname)
-            clients.append(client)
-        print(f"Nome do cliente é {nickname}")
-        broadcast(f"{nickname} entrou no chat!".encode('utf-8'), client)
-        client.send("Conectado ao servidor!".encode('utf-8'))
-        thread = threading.Thread(target=handle_client, args=(client,))
+        client_socket, address = server.accept()
+        clients.append(client_socket)
+        thread = threading.Thread(target=handle_client, args=(client_socket, address))
         thread.start()
 
 if __name__ == "__main__":
-    receive_connections()
+    start_server()
