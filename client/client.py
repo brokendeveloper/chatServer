@@ -1,60 +1,61 @@
 import socket
 import threading
-from colorama import init, Fore, Style
+from colorama import Fore, init
 
 init(autoreset=True)
 
-
 class Client:
-    def __init__(self, host='127.0.0.1', port=55555):
-        self.nickname = ""
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    def __init__(self, host='127.0.0.1', port=5555):
         self.host = host
         self.port = port
+        self.nickname = input("Escolha seu nome: ")
+        self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connected = False
 
-    def print_welcome_message(self):
-        print(Fore.CYAN + Style.BRIGHT + "=========================================")
-        print(Fore.CYAN + Style.BRIGHT + " Bem-vindo ao Chat Distribuído!")
-        print(Fore.CYAN + Style.BRIGHT + "=========================================")
-        print("Conectando ao servidor...")
+    def connect(self):
+        try:
+            self.client.connect((self.host, self.port))
+            self.client.send(self.nickname.encode())
+            self.connected = True
+            print(Fore.GREEN + "Conectado ao servidor!")
+        except Exception as e:
+            print(Fore.RED + f"Erro ao conectar: {e}")
+            self.connected = False
 
-    def receive_messages(self):
-        while True:
+    def receive(self):
+        while self.connected:
             try:
-                message = self.client_socket.recv(1024).decode('utf-8')
-                if message == 'NICK':
-                    self.client_socket.send(self.nickname.encode('utf-8'))
-                else:
+                message = self.client.recv(1024).decode()
+                if message:
                     print(message)
+                else:
+                    break
             except:
-                print(Fore.RED + "Você foi desconectado do servidor.")
-                self.client_socket.close()
+                print(Fore.RED + "Conexão perdida com o servidor.")
+                self.client.close()
+                self.connected = False
                 break
 
-    def send_messages(self):
-        while True:
-            try:
-                message = input("")
-                full_message = f'{self.nickname}: {message}'
-                self.client_socket.send(full_message.encode('utf-8'))
-            except EOFError:
-                self.client_socket.close()
+    def write(self):
+        while self.connected:
+            message = input("")
+            if message.lower() == "/sair":
+                self.client.close()
+                self.connected = False
                 break
-            except:
-                break
+            self.client.send(message.encode())
 
     def start(self):
-        self.print_welcome_message()
-        self.nickname = input("Escolha seu nome: ")
-
-        try:
-            self.client_socket.connect((self.host, self.port))
-        except:
-            print(Fore.RED + "Não foi possível conectar ao servidor.")
+        self.connect()
+        if not self.connected:
             return
 
-        receive_thread = threading.Thread(target=self.receive_messages)
-        receive_thread.daemon = True
+        receive_thread = threading.Thread(target=self.receive)
         receive_thread.start()
 
-        self.send_messages()
+        write_thread = threading.Thread(target=self.write)
+        write_thread.start()
+
+if __name__ == "__main__":
+    client = Client()
+    client.start()
